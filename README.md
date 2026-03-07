@@ -217,10 +217,11 @@ paper-distill-mcp --transport http --port 8765
 |------|------|--------|------|
 | `paper_count_value` | 任意整数 | `6` | 每次推送的论文数 |
 | `paper_count_mode` | `"at_most"` / `"at_least"` / `"exactly"` | `"at_most"` | 数量模式 |
+| `picks_per_reviewer` | 任意整数 | `5` | 每个 reviewer 初选的论文数 |
 | `review_mode` | `"single"` / `"dual"` | `"single"` | 单 AI 评审 / 双 AI 盲审 |
 | `custom_focus` | 自由文本 | `""` | 自定义筛选标准 |
 
-> 💡 **双 AI 盲审**：两个 AI 独立评审同一批论文，两者都选中的论文置信度更高。
+> 💡 **双 AI 盲审**：两个 AI 各自独立初选 5 篇，主审综合终审决定推送（≤6 篇）或溢出，不推送的论文留到下一天而非丢弃。
 > 适合对推送质量要求高的场景。通过 `configure(review_mode="dual")` 开启。
 
 ### 排序权重 (`configure`)
