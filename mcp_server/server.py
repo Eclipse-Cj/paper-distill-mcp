@@ -696,7 +696,7 @@ def setup() -> dict:
             "or `pool_refresh()` if the pool is exhausted.\n"
             "\n"
             "If the user wants to change settings, use `configure()` or `add_topic()`.\n"
-            "Available settings: paper_count, review_mode, ranking weights\n"
+            "Available settings: paper_count, picks_per_reviewer, review_mode, ranking weights\n"
             "(w_relevance, w_recency, w_impact, w_novelty), custom_focus, scan_batches.\n"
             "\n"
             "Push & site: user can set up push platform or paper library website anytime.\n"
@@ -747,6 +747,7 @@ def configure(
     w_recency: float | None = None,
     w_impact: float | None = None,
     w_novelty: float | None = None,
+    picks_per_reviewer: int | None = None,
     scan_batches: int | None = None,
     site_deploy_hook: str | None = None,
     site_repo_path: str | None = None,
@@ -765,7 +766,8 @@ def configure(
         w_recency: Ranking weight for publication recency (default 0.20)
         w_impact: Ranking weight for citation impact (default 0.15)
         w_novelty: Ranking weight for novelty/unseen (default 0.10)
-        scan_batches: Number of scan batches per pool cycle (default 2, pool is reviewed over batches+1 days)
+        picks_per_reviewer: Papers each reviewer selects per scan (default 5)
+        scan_batches: Number of scan batches per pool cycle (default 3, pool is reviewed over batches+1 days)
         site_deploy_hook: Vercel deploy hook URL for auto-deploying paper library website
         site_repo_path: Local path to the paper library site repo (for pushing digest JSON)
         summarizer: Who handles paper summarization to save tokens. Options:
@@ -804,6 +806,9 @@ def configure(
         weights["novelty"] = w_novelty
     if weights:
         pcfg["ranking_weights"] = weights
+
+    if picks_per_reviewer is not None:
+        pcfg["picks_per_reviewer"] = picks_per_reviewer
 
     if scan_batches is not None:
         pcfg["scan_batches"] = scan_batches
@@ -910,10 +915,11 @@ def _pipeline_config(data_dir: Path) -> dict:
     return {
         "topics": prefs.get("topics", {}),
         "paper_count": pcfg.get("paper_count", {"mode": "at_most", "value": 6}),
+        "picks_per_reviewer": pcfg.get("picks_per_reviewer", 5),
         "custom_focus": pcfg.get("custom_focus", ""),
         "review_mode": pcfg.get("review_mode", "single"),
         "ranking_weights": pcfg.get("ranking_weights", {}),
-        "scan_batches": pcfg.get("scan_batches", 2),
+        "scan_batches": pcfg.get("scan_batches", 3),
     }
 
 

@@ -46,5 +46,8 @@ Issues = "https://github.com/Eclipse-Cj/paper-distill-mcp/issues"
 [project.scripts]
 paper-distill-mcp = "mcp_server.server:main"
 
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+
 [tool.hatch.build.targets.wheel]
 packages = ["mcp_server", "search", "curate", "generate", "integrations", "bot", "paper_digest"]

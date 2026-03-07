@@ -8,7 +8,7 @@ Pool lifecycle (consumption-driven, NOT time-based):
   5. Day 4+: overflow-only push
   6. Pool exhausted -> back to step 1
 
-Each day max 6 papers pushed (each of 2 AIs picks 3, or single AI picks 6).
+Each day max 6 papers pushed (each reviewer picks 5, final review selects ≤6).
 Initial review: AI can PUSH / OVERFLOW / DISCARD
 Final review: AI can only PUSH / OVERFLOW (no discard)
 
@@ -152,7 +152,7 @@ async def pool_refresh(config: dict, data_dir: Path, single_topic: str | None = 
             papers = [p for p in papers if (p.get("doi") or "").lower() not in history_dois]
             pool = add_to_pool(pool, papers, single_topic)
             # Re-assign scan batches to include new papers
-            num_batches = config.get("scan_batches", 2)
+            num_batches = config.get("scan_batches", 3)
             pool = assign_scan_batches(pool, num_batches=num_batches)
             force_topic(data_dir, single_topic)
     else:
@@ -177,7 +177,7 @@ async def pool_refresh(config: dict, data_dir: Path, single_topic: str | None = 
             pool = add_to_pool(pool, papers, key)
 
         # Assign scan batches per config (default: 2)
-        num_batches = config.get("scan_batches", 2)
+        num_batches = config.get("scan_batches", 3)
         pool = assign_scan_batches(pool, num_batches=num_batches)
 
     save_pool(data_dir, pool)
@@ -197,7 +197,8 @@ def prepare_review(config: dict, data_dir: Path, dual: bool = False) -> str:
     topics = config.get("topics", {})
     history_dois = get_history_dois(data_dir)
     custom_focus = config.get("custom_focus", "")
-    picks_per_reviewer = 3 if dual else config.get("paper_count", {}).get("value", 6)
+    picks_per_reviewer = config.get("picks_per_reviewer", 5)
+    max_push = config.get("paper_count", {}).get("value", 6)
 
     # Check if pool is exhausted — need refresh first
     if is_pool_exhausted(pool):

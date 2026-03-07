@@ -145,7 +145,7 @@ def add_to_pool(pool: dict, papers: list[dict], topic_key: str) -> dict:
 # Scan batch management
 # ---------------------------------------------------------------------------
 
-def assign_scan_batches(pool: dict, num_batches: int = 2) -> dict:
+def assign_scan_batches(pool: dict, num_batches: int = 3) -> dict:
     """Assign pending papers to scan batches (done once after pool creation).
 
     Splits pending papers into `num_batches` groups.
