@@ -19,7 +19,7 @@
 - 🔍 **9 源并行搜索** — OpenAlex、Semantic Scholar、PubMed、arXiv、Papers with Code、CrossRef、Europe PMC、bioRxiv、DBLP
 - 🤖 **AI 自适应推送** — Agent 在对话中感知你的研究方向变化，自动调整搜索关键词和推送内容
 - 📊 **4 维加权排序** — 相关性 × 新近度 × 影响力 × 新颖度，权重完全可自定义
-- 👥 **双 AI 盲审** — 两个 AI 独立筛选论文，取交集为高置信推送（可选）
+- 👥 **双 AI 盲审** — 两个 AI 独立初选，主审综合终审决定推送、溢出或丢弃（可选）
 - 🧹 **Scraper 代理** — 将论文摘要提取任务委托给低成本 agent 或 API，大幅减少 token 消耗
 - 🌐 **论文库网站** — Astro + Vercel 自动部署，每次推送后 30 秒内网站更新
 - 📬 **多平台推送** — Telegram / Discord / 飞书 / 企业微信
