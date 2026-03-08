@@ -398,6 +398,39 @@ paper-distill-mcp
 
 ---
 
+## ❓ 常见问题
+
+### Review 阶段卡住 / 半小时无响应
+
+**症状**：`prepare_review()` 生成的审稿 prompt 发送给 AI 后，长时间无响应或超时。
+
+**原因**：论文池中候选论文过多（如 80-100 篇），生成的 prompt 超出了客户端的上下文窗口或输出 token 上限。VS Code Copilot、部分 IDE 插件的上下文能力有限，无法处理这么长的结构化输入。
+
+**解决方案**（任选其一）：
+
+1. **增加 scan_batches**（推荐）— 把论文池拆成更多批次，每批审稿数量减少：
+   ```
+   configure(scan_batches=5)
+   ```
+   200 篇论文分 5 批 → 每天约 40 篇，大多数客户端都能正常处理。
+
+2. **减少研究方向或关键词** — 方向越多，搜索结果越多。精简关键词可以从源头控制池子大小。
+
+3. **换用上下文更大的客户端** — Claude Code（200k）、Claude Desktop（200k）、Cursor 等对长 prompt 支持更好。
+
+### 安装报错 `Requires-Python >=3.10`
+
+需要 Python 3.10 或更高版本。macOS 自带的 Python 通常是 3.9，请通过 `brew install python@3.13` 或 `uv` 安装新版本。
+
+### Docker 镜像国内无法拉取
+
+`ghcr.io` 在中国大陆被墙。建议使用 pip + 清华源安装：
+```bash
+pip install paper-distill-mcp -i https://pypi.tuna.tsinghua.edu.cn/simple
+```
+
+---
+
 ## 🧑‍💻 开发
 
 ```bash
