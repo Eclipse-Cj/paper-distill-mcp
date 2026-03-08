@@ -6,7 +6,7 @@
 
 set -e
 
-TEST_DIR="/Users/jie/test-workspace/paper-distill-mcp"
+TEST_DIR="/tmp/test-workspace/paper-distill-mcp"
 TEST_DATA="$HOME/.paper-distill-test"
 REPO="https://github.com/Eclipse-Cj/paper-distill-mcp.git"
 
