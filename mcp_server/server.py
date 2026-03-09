@@ -636,7 +636,33 @@ def setup() -> dict:
             "- Feishu / 飞书 (need webhook URL)\n"
             "- WeCom / 企业微信 (need webhook URL)\n"
             "\n"
-            "If the user wants push, guide them to set the corresponding env vars.\n"
+            "If the user wants push, guide them to add the env var in their MCP client config.\n"
+            "Show them the exact JSON to add in the `env` block of their MCP server config.\n"
+            "Example for WeCom:\n"
+            "```json\n"
+            "{\n"
+            '  "mcpServers": {\n'
+            '    "paper-distill": {\n'
+            '      "command": "uvx",\n'
+            '      "args": ["paper-distill-mcp"],\n'
+            '      "env": {\n'
+            '        "WECOM_WEBHOOK_URL": "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=YOUR_KEY"\n'
+            "      }\n"
+            "    }\n"
+            "  }\n"
+            "}\n"
+            "```\n"
+            "Similarly for other platforms: DISCORD_WEBHOOK_URL, FEISHU_WEBHOOK_URL,\n"
+            "TELEGRAM_BOT_TOKEN + TELEGRAM_CHAT_ID.\n"
+            "\n"
+            "IMPORTANT: The env var MUST be set in the MCP client config so that\n"
+            "paper-distill can use its built-in `send_push()`. Do NOT generate scripts\n"
+            "(PowerShell, curl, etc.) to call webhooks directly — this causes encoding\n"
+            "issues with non-ASCII characters (e.g. Chinese text appearing as ????).\n"
+            "\n"
+            "After the user adds the env var, they need to restart the MCP client\n"
+            "for it to take effect. Then call `setup()` again to verify detection.\n"
+            "\n"
             "Push message format: title, journal, two-line summary, DOI link.\n"
             "If not interested, skip — paper search still works without push.\n"
             "\n"
