@@ -300,7 +300,22 @@ paper-distill-mcp --transport http --port 8765
 > 否则 `send_push()` 无法获取 webhook 地址，AI 可能会生成脚本（如 PowerShell）直接调用 webhook，
 > 导致中文乱码等编码问题。
 
-配置示例（以企业微信为例）：
+**配置文件在哪？** 找到你的 MCP 客户端对应的配置文件，在 paper-distill 的配置中加入 `env` 字段：
+
+| 客户端 | 配置文件路径 |
+|--------|-------------|
+| Claude Desktop | `claude_desktop_config.json`（Settings → Developer → Edit Config） |
+| Claude Code | `~/.claude/claude_code_config.json` 或项目 `.mcp.json` |
+| Cursor | `~/.cursor/mcp.json` |
+| Trae | 设置 → MCP → 添加（界面中填写） |
+| VS Code (Copilot) | `.vscode/mcp.json` |
+| Windsurf | `~/.codeium/windsurf/mcp_config.json` |
+| Cherry Studio | 设置 → MCP 服务器 → 编辑（界面中填写环境变量） |
+| Zed | `settings.json` |
+
+配置示例（以企业微信 + Claude Desktop 为例）：
+
+打开 `claude_desktop_config.json`，找到 `paper-distill` 的配置，加入 `env` 字段：
 
 ```json
 {
@@ -315,6 +330,8 @@ paper-distill-mcp --transport http --port 8765
   }
 }
 ```
+
+其他平台同理，把 `WECOM_WEBHOOK_URL` 换成对应的环境变量名和值即可。
 
 添加后需**重启 MCP 客户端**使配置生效。
 
