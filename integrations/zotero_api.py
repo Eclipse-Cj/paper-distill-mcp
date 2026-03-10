@@ -5,6 +5,7 @@ Features:
   - Add papers to a Zotero library from papers.jsonl
   - Auto-categorise into collections by topic tag
   - Create journal-article items with full metadata
+  - Auto-enrich incomplete metadata via CrossRef/DataCite DOI resolution
 
 Requires ZOTERO_LIBRARY_ID and ZOTERO_API_KEY in .env.
 
@@ -19,9 +20,11 @@ import argparse
 import json
 import logging
 import os
+import re
 import sys
 from pathlib import Path
 
+import httpx
 from dotenv import load_dotenv
 
 try:
@@ -60,6 +63,102 @@ AREA_COLLECTION_MAP: dict[str, str] = {
     "Diffusion":        "Generative Models",
     "RL":               "RL",
 }
+
+
+# ── DOI metadata enrichment ─────────────────────────────────────────────────
+
+def _enrich_from_crossref(doi: str) -> dict:
+    """Resolve full metadata from a DOI via CrossRef API.
+
+    Returns a dict with title, authors, journal, year, abstract (if available).
+    Returns empty dict on failure.
+    """
+    if not doi:
+        return {}
+
+    url = f"https://api.crossref.org/works/{doi}"
+    headers = {"User-Agent": "paper-distill/1.0 (https://github.com/Eclipse-Cj/paper-distill-mcp)"}
+
+    try:
+        with httpx.Client(timeout=15.0, headers=headers) as client:
+            resp = client.get(url)
+            if resp.status_code != 200:
+                logger.debug("CrossRef lookup failed for %s: HTTP %d", doi, resp.status_code)
+                return {}
+            item = resp.json().get("message", {})
+    except (httpx.RequestError, Exception) as e:
+        logger.debug("CrossRef lookup error for %s: %s", doi, e)
+        return {}
+
+    # Parse authors
+    authors = []
+    for author in item.get("author", []):
+        given = author.get("given", "")
+        family = author.get("family", "")
+        if family:
+            authors.append(f"{given} {family}".strip())
+
+    # Parse year from date fields
+    year = None
+    for date_field in ("published-print", "published-online", "created"):
+        date_parts = item.get(date_field, {}).get("date-parts", [[]])
+        if date_parts and date_parts[0] and date_parts[0][0]:
+            year = date_parts[0][0]
+            break
+
+    # Parse journal
+    container = item.get("container-title", [])
+    journal = container[0] if container else ""
+
+    # Parse abstract (strip JATS XML tags)
+    abstract = item.get("abstract", "")
+    if abstract:
+        abstract = re.sub(r"<[^>]+>", "", abstract)
+
+    # Parse title
+    title_list = item.get("title", [])
+    title = title_list[0] if title_list else ""
+
+    result = {}
+    if title:
+        result["title"] = title
+    if authors:
+        result["authors"] = authors
+    if journal:
+        result["journal"] = journal
+    if year:
+        result["year"] = year
+    if abstract:
+        result["abstract"] = abstract
+
+    if result:
+        logger.info("Enriched metadata from CrossRef for DOI %s: got %s",
+                     doi, ", ".join(result.keys()))
+
+    return result
+
+
+def _ensure_metadata(paper: dict) -> dict:
+    """Ensure a paper dict has complete metadata.
+
+    If critical fields (title, authors) are missing but DOI is present,
+    fetches metadata from CrossRef and fills in the gaps.
+
+    Returns the (possibly enriched) paper dict (mutated in place).
+    """
+    doi = paper.get("doi", "")
+    title = (paper.get("title") or "").strip()
+
+    # Only enrich if we have a DOI but missing critical metadata
+    if doi and not title:
+        logger.info("Paper has DOI (%s) but no title — enriching from CrossRef", doi)
+        enriched = _enrich_from_crossref(doi)
+        for key, value in enriched.items():
+            # Only fill in missing fields, don't overwrite existing data
+            if not paper.get(key):
+                paper[key] = value
+
+    return paper
 
 
 # ── Zotero client ──────────────────────────────────────────────────────────
@@ -193,8 +292,15 @@ class ZoteroClient:
         """
         Create Zotero items for multiple papers.
 
+        Automatically enriches papers with incomplete metadata via CrossRef
+        before creating Zotero items.
+
         Returns list of successfully created item data dicts.
         """
+        # Enrich papers with missing metadata before creating items
+        for paper in papers:
+            _ensure_metadata(paper)
+
         items = [self.paper_to_zotero_item(p) for p in papers]
 
         if not items:
