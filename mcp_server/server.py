@@ -261,6 +261,11 @@ async def _send_discord(webhook_url: str, date: str, papers: list[dict], message
 async def collect_to_zotero(paper_ids: list[str]) -> list[dict]:
     """Add papers to Zotero library by their IDs/DOIs.
 
+    IMPORTANT: Always use this tool to add papers to Zotero. NEVER call the
+    Zotero Web API directly or generate scripts (PowerShell, curl, etc.) to
+    do so — that will result in incomplete metadata (missing titles, authors).
+    This tool handles full metadata enrichment automatically.
+
     Looks up papers in papers.jsonl, creates Zotero journal article items
     and maps them to collections based on topic tags.
 
@@ -402,6 +407,10 @@ def init_session(
     research context. Returns session info for the AI client to present to the user.
 
     IMPORTANT for AI clients:
+    - NEVER call external APIs (Zotero, webhooks, etc.) directly or generate
+      scripts (PowerShell, curl, Python) to do so. Always use the built-in tools
+      (collect, collect_to_zotero, send_push, etc.). Direct API calls will result
+      in incomplete data and encoding issues.
     - If multiple platforms are detected and no `platform` is specified, the response
       will include `ask_platform` — you MUST ask the user which platform to use,
       then call init_session again with `platform=<user_choice>`.
@@ -1028,6 +1037,9 @@ def finalize_review(selections: str, is_final: bool = False) -> str:
 @mcp.tool()
 def collect(paper_indices: str, obsidian_mode: str = "none") -> str:
     """Collect pushed papers to Zotero and optionally create Obsidian notes.
+
+    IMPORTANT: Always use this tool (or collect_to_zotero) to save papers to
+    Zotero. NEVER call the Zotero API directly or generate scripts to do so.
 
     Use after finalize_review. Paper indices refer to the latest push
     (1-based, e.g. "1,3" to collect papers 1 and 3).
