@@ -68,17 +68,21 @@ def collect_to_zotero(
     papers: list[dict],
     project_root: Path,
 ) -> list[dict]:
-    """Add papers to Zotero. Returns list of created items."""
+    """Add papers to Zotero with PDF attachment. Returns list of created items."""
+    import asyncio
     import sys
     sys.path.insert(0, str(project_root))
 
+    # Enrich OA links via Unpaywall before sending to Zotero
     try:
-        from integrations.zotero_api import add_papers_to_zotero_sync
-        paper_ids = [p.get("doi") or p.get("id") or "" for p in papers]
-        paper_ids = [pid for pid in paper_ids if pid]
-        if not paper_ids:
-            return []
-        return add_papers_to_zotero_sync(project_root, paper_ids)
+        from search.unpaywall_lookup import enrich_open_access
+        papers = asyncio.run(enrich_open_access(papers))
+    except Exception:
+        pass
+
+    try:
+        from integrations.zotero_api import add_papers_to_zotero_by_data_sync
+        return add_papers_to_zotero_by_data_sync(project_root, papers)
     except ImportError:
         LOG.warning("Zotero integration not available (pyzotero not installed)")
         return []

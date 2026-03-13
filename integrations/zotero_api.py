@@ -24,6 +24,8 @@ import re
 import sys
 from pathlib import Path
 
+import tempfile
+
 import httpx
 from dotenv import load_dotenv
 
@@ -333,7 +335,55 @@ class ZoteroClient:
                 raise
 
         logger.info("Successfully created %d Zotero items", len(results))
+
+        # Attach PDFs for papers with open_access_url
+        for paper, item_data in zip(papers, results):
+            self._attach_pdf(paper, item_data)
+
         return results
+
+    def _attach_pdf(self, paper: dict, item_data: dict) -> None:
+        """Download and attach PDF if open_access_url is available."""
+        pdf_url = paper.get("open_access_url", "")
+        if not pdf_url:
+            return
+
+        item_key = item_data.get("data", item_data).get("key", "")
+        if not item_key:
+            return
+
+        # Ensure URL points to a PDF (arXiv needs /pdf/ suffix)
+        if "arxiv.org/abs/" in pdf_url:
+            pdf_url = pdf_url.replace("/abs/", "/pdf/") + ".pdf"
+
+        title = paper.get("title", "paper")
+        safe_name = re.sub(r'[^\w\s-]', '', title)[:80].strip() + ".pdf"
+
+        try:
+            with httpx.Client(timeout=60.0, follow_redirects=True) as client:
+                resp = client.get(pdf_url)
+                if resp.status_code != 200:
+                    logger.debug("PDF download failed for %s: HTTP %d", pdf_url, resp.status_code)
+                    return
+                content_type = resp.headers.get("content-type", "")
+                if "pdf" not in content_type and not resp.content[:5] == b"%PDF-":
+                    logger.debug("Not a PDF: %s (content-type: %s)", pdf_url, content_type)
+                    return
+
+            with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp:
+                tmp.write(resp.content)
+                tmp_path = tmp.name
+
+            self.zot.attachment_simple([tmp_path], item_key)
+            logger.info("Attached PDF for: %s", title[:60])
+
+        except Exception as e:
+            logger.debug("PDF attachment failed for %s: %s", pdf_url, e)
+        finally:
+            try:
+                Path(tmp_path).unlink(missing_ok=True)
+            except Exception:
+                pass
 
 
 # ── helper functions ───────────────────────────────────────────────────────
@@ -550,6 +600,31 @@ def add_papers_to_zotero_sync(
 
     client = ZoteroClient(library_id, api_key)
     return client.add_items(papers_to_add)
+
+
+def add_papers_to_zotero_by_data_sync(
+    project_root: Path | str,
+    papers: list[dict],
+) -> list[dict]:
+    """
+    Synchronous version: add papers directly by data (not by ID lookup).
+    Papers should already have open_access_url enriched for PDF attachment.
+    """
+    project_root = Path(project_root)
+    env_path = project_root / ".env"
+    load_dotenv(env_path)
+
+    library_id = os.getenv("ZOTERO_LIBRARY_ID", "")
+    api_key    = os.getenv("ZOTERO_API_KEY", "")
+
+    if not library_id or not api_key:
+        raise ValueError("ZOTERO_LIBRARY_ID and ZOTERO_API_KEY must be set in .env")
+
+    if not papers:
+        return []
+
+    client = ZoteroClient(library_id, api_key)
+    return client.add_items(papers)
 
 
 # ── CLI ────────────────────────────────────────────────────────────────────
