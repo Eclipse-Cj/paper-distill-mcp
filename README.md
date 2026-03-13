@@ -16,7 +16,7 @@
 
 ## ✨ 核心特性
 
-- 🔍 **9 源并行搜索** — OpenAlex、Semantic Scholar、PubMed、arXiv、Papers with Code、CrossRef、Europe PMC、bioRxiv、DBLP
+- 🔍 **11 源并行搜索** — OpenAlex、Semantic Scholar、PubMed、arXiv、Papers with Code、CrossRef、Europe PMC、bioRxiv、DBLP、CORE、Unpaywall
 - 🤖 **AI 自适应推送** — Agent 在对话中感知你的研究方向变化，自动调整搜索关键词和推送内容
 - 📊 **4 维加权排序** — 相关性 × 新近度 × 影响力 × 新颖度，权重完全可自定义
 - 👥 **双 AI 盲审** — 两个 AI 独立初选，主审综合终审决定推送、溢出或丢弃（可选）
@@ -279,7 +279,7 @@ paper-distill-mcp --transport http --port 8765
 |------|------|--------|
 | `scan_batches` | 将论文池分为 N 批，N+1 天内评审完毕 | `2`（3 天） |
 
-**扫描批次工作原理**：`pool_refresh()` 搜索 9 个 API 后，所有结果进入论文池。
+**扫描批次工作原理**：`pool_refresh()` 搜索 11 个 API 后，所有结果进入论文池。
 论文池被分成若干批次供 AI 逐日评审 — 避免一次性甩出 60+ 篇论文。
 
 - `scan_batches=2`（默认）：第 1 天评审前半、第 2 天评审后半、第 3 天汇总
@@ -401,7 +401,8 @@ paper-distill-mcp --transport http --port 8765
 
 | 变量 | 说明 | 是否必需 |
 |------|------|---------|
-| `OPENALEX_EMAIL` | 提高 OpenAlex API 速率 | 可选 |
+| `OPENALEX_EMAIL` | 提高 OpenAlex API 速率，同时用于 Unpaywall 查询 | 可选 |
+| `CORE_API_KEY` | CORE API 密钥（[免费注册](https://core.ac.uk/services/api)） | 可选 |
 | `DEEPSEEK_API_KEY` | 增强搜索（DeepSeek） | 可选 |
 | `ZOTERO_LIBRARY_ID` + `ZOTERO_API_KEY` | 保存论文到 Zotero | 可选 |
 | `SITE_URL` | 论文库网站地址 | 可选 |
@@ -423,7 +424,7 @@ paper-distill-mcp --transport http --port 8765
 
 | 工具 | 说明 |
 |------|------|
-| `search_papers(query)` | 9 源并行搜索 |
+| `search_papers(query)` | 11 源并行搜索 |
 | `rank_papers(papers)` | 4 维加权评分 |
 | `filter_duplicates(papers)` | 与已推送论文去重 |
 
@@ -431,7 +432,7 @@ paper-distill-mcp --transport http --port 8765
 
 | 工具 | 说明 |
 |------|------|
-| `pool_refresh(topic?)` | 搜索 9 个 API，构建论文池 |
+| `pool_refresh(topic?)` | 搜索 11 个 API，构建论文池 |
 | `prepare_summarize(custom_focus?)` | 生成 AI 摘要提取提示 |
 | `prepare_review(dual?)` | 生成评审提示 — AI 做 push/overflow/discard 决策 |
 | `finalize_review(selections)` | 处理 AI 决策，更新论文池，输出推送消息 |
@@ -458,7 +459,7 @@ paper-distill-mcp --transport http --port 8765
 AI 客户端（Claude Code / Codex CLI / Gemini CLI / Cursor / ...）
     ↓ MCP（stdio 或 HTTP）
 paper-distill-mcp
-    ├── search/         — 9 源学术搜索
+    ├── search/         — 11 源学术搜索（含 OA 全文增强）
     ├── curate/         — 评分 + 去重
     ├── generate/       — 输出（JSONL、Obsidian、网站）
     ├── bot/            — 推送格式化（4 平台）
@@ -467,6 +468,19 @@ paper-distill-mcp
 
 服务器内部不调用 LLM。搜索、排序、去重都是纯数据操作。
 智能来自你的 AI 客户端。
+
+---
+
+## 📖 付费论文 & 全文获取
+
+系统默认搜索覆盖所有论文（含付费期刊），并通过以下方式最大化免费全文获取：
+
+1. **CORE** — 全球最大 OA 聚合平台（2 亿+篇），收录各大学机构库的作者自存档版本
+2. **Unpaywall** — 搜索结果合并后，自动通过 DOI 查找合法免费 PDF（预印本、绿色 OA、作者版本）
+
+对于确实没有免费版本的论文，系统返回 DOI 链接。**如果你有学校 VPN，连上后直接点击 DOI 链接即可下载** — 出版商通过 IP 识别学校身份，自动放行，无需额外登录。
+
+> `open_access_url` 优先级：arXiv > CORE > Unpaywall > OpenAlex > Semantic Scholar > Papers with Code
 
 ---
 
