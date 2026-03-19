@@ -1,0 +1,73 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.Eclipse-Cj/paper-distill-mcp",
+  "title": "Paper Distill MCP",
+  "description": "Academic paper search across 11 sources with AI curation, ranked push, Zotero and Obsidian support.",
+  "repository": {
+    "url": "https://github.com/Eclipse-Cj/paper-distill-mcp",
+    "source": "github"
+  },
+  "version": "0.2.1",
+  "packages": [
+    {
+      "registryType": "pypi",
+      "identifier": "paper-distill-mcp",
+      "version": "0.2.1",
+      "runtimeHint": "uvx",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "name": "OPENALEX_EMAIL",
+          "description": "Email for OpenAlex polite pool (higher rate limits) and Unpaywall queries",
+          "isRequired": false,
+          "isSecret": false,
+          "format": "string"
+        },
+        {
+          "name": "CORE_API_KEY",
+          "description": "CORE API key for enhanced open-access paper retrieval (free at core.ac.uk)",
+          "isRequired": false,
+          "isSecret": true,
+          "format": "string"
+        },
+        {
+          "name": "TELEGRAM_BOT_TOKEN",
+          "description": "Telegram bot token for paper delivery",
+          "isRequired": false,
+          "isSecret": true,
+          "format": "string"
+        },
+        {
+          "name": "TELEGRAM_CHAT_ID",
+          "description": "Telegram chat ID for paper delivery",
+          "isRequired": false,
+          "isSecret": false,
+          "format": "string"
+        },
+        {
+          "name": "DISCORD_WEBHOOK_URL",
+          "description": "Discord webhook URL for paper delivery",
+          "isRequired": false,
+          "isSecret": true,
+          "format": "string"
+        },
+        {
+          "name": "ZOTERO_LIBRARY_ID",
+          "description": "Zotero user ID for saving papers to your library",
+          "isRequired": false,
+          "isSecret": false,
+          "format": "string"
+        },
+        {
+          "name": "ZOTERO_API_KEY",
+          "description": "Zotero API key for saving papers to your library",
+          "isRequired": false,
+          "isSecret": true,
+          "format": "string"
+        }
+      ]
+    }
+  ]
+}
