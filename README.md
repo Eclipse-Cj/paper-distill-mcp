@@ -5,7 +5,7 @@
 [![PyPI version](https://img.shields.io/pypi/v/paper-distill-mcp.svg)](https://pypi.org/project/paper-distill-mcp/)
 [![CI](https://github.com/Eclipse-Cj/paper-distill-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/Eclipse-Cj/paper-distill-mcp/actions/workflows/ci.yml)
 
-<!-- mcp-name: io.github.eclipse-cj/paper-distill-mcp -->
+<!-- mcp-name: io.github.Eclipse-Cj/paper-distill-mcp -->
 
 Academic paper search, intelligent curation, and multi-platform delivery — built on the [Model Context Protocol](https://modelcontextprotocol.io/).
 

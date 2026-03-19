@@ -1,18 +1,18 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-  "name": "io.github.eclipse-cj/paper-distill-mcp",
+  "name": "io.github.Eclipse-Cj/paper-distill-mcp",
   "title": "Paper Distill MCP",
   "description": "Academic paper search across 11 sources with AI curation, ranked push, Zotero and Obsidian support.",
   "repository": {
     "url": "https://github.com/Eclipse-Cj/paper-distill-mcp",
     "source": "github"
   },
-  "version": "0.2.3",
+  "version": "0.2.4",
   "packages": [
     {
       "registryType": "pypi",
       "identifier": "paper-distill-mcp",
-      "version": "0.2.3",
+      "version": "0.2.4",
       "runtimeHint": "uvx",
       "transport": {
         "type": "stdio"
