@@ -1,0 +1,158 @@
+{
+  "$schema": "https://glama.ai/mcp/schemas/server.json",
+  "name": "paper-distill-mcp",
+  "version": "0.2.4",
+  "description": "MCP server for academic paper search across 9 sources (OpenAlex, Semantic Scholar, PubMed, arXiv, Papers with Code, CrossRef, Europe PMC, bioRxiv, DBLP) with AI-powered curation, ranked push to Telegram/Discord/Feishu/WeCom, and Zotero/Obsidian integration.",
+  "maintainers": ["Eclipse-Cj"],
+  "homepage": "https://github.com/Eclipse-Cj/paper-distill-mcp",
+  "repository": "https://github.com/Eclipse-Cj/paper-distill-mcp.git",
+  "issues": "https://github.com/Eclipse-Cj/paper-distill-mcp/issues",
+  "license": "AGPL-3.0-only",
+  "keywords": [
+    "mcp",
+    "paper",
+    "academic",
+    "search",
+    "arxiv",
+    "pubmed",
+    "openalex",
+    "semantic-scholar",
+    "zotero",
+    "obsidian",
+    "telegram",
+    "discord",
+    "curation",
+    "ai",
+    "llm"
+  ],
+  "categories": ["research", "academic", "data", "api"],
+  "installation": {
+    "pip": {
+      "package": "paper-distill-mcp"
+    }
+  },
+  "configuration": {
+    "command": "uvx",
+    "args": ["paper-distill-mcp"],
+    "env": {
+      "OPENALEX_EMAIL": {
+        "description": "Email for OpenAlex polite pool (higher rate limits)",
+        "required": false
+      },
+      "CORE_API_KEY": {
+        "description": "CORE API key for open-access paper retrieval",
+        "required": false
+      },
+      "TELEGRAM_BOT_TOKEN": {
+        "description": "Telegram bot token for paper delivery",
+        "required": false
+      },
+      "TELEGRAM_CHAT_ID": {
+        "description": "Telegram chat ID for paper delivery",
+        "required": false
+      },
+      "DISCORD_WEBHOOK_URL": {
+        "description": "Discord webhook URL for paper delivery",
+        "required": false
+      },
+      "ZOTERO_LIBRARY_ID": {
+        "description": "Zotero user ID for saving papers",
+        "required": false
+      },
+      "ZOTERO_API_KEY": {
+        "description": "Zotero API key for saving papers",
+        "required": false
+      }
+    }
+  },
+  "capabilities": {
+    "tools": true,
+    "resources": true,
+    "prompts": false
+  },
+  "tools": [
+    {
+      "name": "search_papers",
+      "description": "Search academic papers across 9 sources with deduplication and merged ranking"
+    },
+    {
+      "name": "rank_papers",
+      "description": "Score and rank papers using 4-factor weighted formula (relevance, recency, impact, novelty)"
+    },
+    {
+      "name": "filter_duplicates",
+      "description": "Remove papers already pushed by DOI match against history"
+    },
+    {
+      "name": "generate_digest",
+      "description": "Generate formatted paper digest output for a given date"
+    },
+    {
+      "name": "send_push",
+      "description": "Push paper digest to Telegram, Discord, Feishu, or WeCom"
+    },
+    {
+      "name": "collect_to_zotero",
+      "description": "Save selected papers to Zotero library with metadata and PDF"
+    },
+    {
+      "name": "manage_topics",
+      "description": "Add, remove, or list research topic preferences"
+    },
+    {
+      "name": "ingest_research_context",
+      "description": "Ingest research context from user descriptions to configure topics"
+    },
+    {
+      "name": "init_session",
+      "description": "Initialize a new paper distill session with configuration"
+    },
+    {
+      "name": "load_session_context",
+      "description": "Load existing session context and state"
+    },
+    {
+      "name": "setup",
+      "description": "Interactive first-run setup wizard for the server"
+    },
+    {
+      "name": "add_topic",
+      "description": "Add a new research topic with keywords and weight"
+    },
+    {
+      "name": "configure",
+      "description": "Update server configuration settings"
+    },
+    {
+      "name": "pool_refresh",
+      "description": "Refresh the paper candidate pool by searching all topics"
+    },
+    {
+      "name": "prepare_review",
+      "description": "Prepare paper candidates for human review"
+    },
+    {
+      "name": "finalize_review",
+      "description": "Finalize paper selections after review"
+    },
+    {
+      "name": "collect",
+      "description": "Collect selected papers to Zotero and/or Obsidian"
+    },
+    {
+      "name": "pool_status",
+      "description": "Show current paper pool statistics"
+    },
+    {
+      "name": "prepare_summarize",
+      "description": "Prepare selected papers for AI summarization"
+    }
+  ],
+  "author": {
+    "name": "Jie Cao",
+    "email": "vertex.cj@gmail.com"
+  },
+  "requirements": {
+    "python": ">=3.10"
+  }
+}
