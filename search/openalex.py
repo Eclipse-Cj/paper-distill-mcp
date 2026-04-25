@@ -145,6 +145,7 @@ async def search_openalex(
     """Query OpenAlex /works and return normalised paper dicts."""
 
     email = email or os.getenv("OPENALEX_EMAIL", "")
+    api_key = os.getenv("OPENALEX_API_KEY", "")
     base_url = "https://api.openalex.org/works"
 
     # Build filter components
@@ -172,9 +173,13 @@ async def search_openalex(
             if email:
                 params["mailto"] = email
 
+            headers = {}
+            if api_key:
+                headers["Authorization"] = f"Bearer {api_key}"
+
             LOG.info("OpenAlex query: search=%s", kw)
             try:
-                resp = await client.get(base_url, params=params)
+                resp = await client.get(base_url, params=params, headers=headers)
                 resp.raise_for_status()
                 data = resp.json()
             except httpx.HTTPStatusError as exc:

@@ -34,6 +34,10 @@ load_dotenv(PROJECT_ROOT / ".env")
 # ---------------------------------------------------------------------------
 async def _search_openalex(query: str, max_results: int = 30) -> list[dict]:
     email = os.getenv("OPENALEX_EMAIL", "")
+    api_key = os.getenv("OPENALEX_API_KEY", "")
+    headers = {}
+    if api_key:
+        headers["Authorization"] = f"Bearer {api_key}"
     papers = []
     async with httpx.AsyncClient(timeout=30) as client:
         params = {
@@ -43,7 +47,7 @@ async def _search_openalex(query: str, max_results: int = 30) -> list[dict]:
         }
         if email:
             params["mailto"] = email
-        resp = await client.get("https://api.openalex.org/works", params=params)
+        resp = await client.get("https://api.openalex.org/works", params=params, headers=headers)
         if resp.status_code != 200:
             return []
         for w in resp.json().get("results", []):
