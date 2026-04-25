@@ -259,24 +259,65 @@ async def _send_discord(webhook_url: str, date: str, papers: list[dict], message
 
 @mcp.tool()
 async def collect_to_zotero(paper_ids: list[str]) -> list[dict]:
-    """Add papers to Zotero library by their IDs/DOIs.
+    """Add papers to Zotero library OR save locally if Zotero is not configured.
 
-    IMPORTANT: Always use this tool to add papers to Zotero. NEVER call the
-    Zotero Web API directly or generate scripts (PowerShell, curl, etc.) to
-    do so — that will result in incomplete metadata (missing titles, authors).
-    This tool handles full metadata enrichment automatically.
+    Priority Logic:
+    1. If ZOTERO_LIBRARY_ID and ZOTERO_API_KEY are set -> Save to Zotero.
+    2. Otherwise -> Save to local file system (PDF + Markdown).
 
-    Looks up papers in papers.jsonl, creates Zotero journal article items
-    and maps them to collections based on topic tags.
+    IMPORTANT: Always use this tool to collect papers. It automatically
+    handles metadata enrichment and chooses the best storage method.
 
     Args:
-        paper_ids: List of paper DOIs or IDs to add to Zotero
+        paper_ids: List of paper DOIs or IDs to collect
     """
     _ensure_sys_path()
-    from integrations.zotero_api import add_papers_to_zotero
+    import os
 
-    root = _get_root()
-    return await add_papers_to_zotero(root, paper_ids)
+    # Check Zotero configuration
+    zotero_lib_id = os.getenv("ZOTERO_LIBRARY_ID", "")
+    zotero_api_key = os.getenv("ZOTERO_API_KEY", "")
+
+    if zotero_lib_id and zotero_api_key:
+        logger.info("Zotero configured. Saving to Zotero...")
+        from integrations.zotero_api import add_papers_to_zotero
+        root = _get_root()
+        return await add_papers_to_zotero(root, paper_ids)
+    else:
+        logger.info("Zotero not configured. Saving to local library...")
+        from integrations.local_library import save_papers_locally
+        from mcp_server.config import load_config
+        
+        # Resolve paper_ids to full paper objects
+        root = _get_root()
+        papers_path = root / "data" / "papers.jsonl"
+        
+        # Load all papers
+        all_papers = []
+        if papers_path.exists():
+            for line in papers_path.read_text(encoding="utf-8").splitlines():
+                if line.strip():
+                    try:
+                        all_papers.append(json.loads(line))
+                    except json.JSONDecodeError:
+                        pass
+
+        # Filter by IDs
+        papers_to_save = []
+        lookup = {p.get("doi", "").lower(): p for p in all_papers if p.get("doi")}
+        lookup.update({p.get("id", ""): p for p in all_papers if p.get("id")})
+
+        for pid in paper_ids:
+            p = lookup.get(pid) or lookup.get(pid.lower())
+            if p:
+                papers_to_save.append(p)
+            else:
+                logger.warning("Paper not found for local save: %s", pid)
+
+        if not papers_to_save:
+            return [{"error": "No papers found matching IDs"}]
+
+        return await save_papers_locally(papers_to_save)
 
 
 @mcp.tool()

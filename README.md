@@ -348,11 +348,37 @@ Save papers to Zotero with one command. Requires a Zotero account and API key.
 
 After setup, reply `collect 1 3` after a push to save papers 1 and 3 to Zotero, automatically sorted into per-topic folders.
 
+### OpenAlex Configuration
+
+OpenAlex is the primary search engine for Paper Distill. While basic search works without authentication, configuring your API Key provides higher rate limits and better reliability.
+
+**Getting credentials:**
+1. **API Key**: go to [openalex.org/settings/api-key](https://openalex.org/settings/api-key) → create a new key (free for academic use)
+2. **Email**: any valid email address to join the "polite pool"
+
+**Add to MCP client config:**
+
+```json
+{
+  "mcpServers": {
+    "paper-distill": {
+      "command": "uvx",
+      "args": ["paper-distill-mcp"],
+      "env": {
+        "OPENALEX_EMAIL": "your-email@example.com",
+        "OPENALEX_API_KEY": "your-api-key"
+      }
+    }
+  }
+}
+```
+
 ### All Environment Variables
 
 | Variable | Description | Required |
 |----------|-------------|----------|
 | `OPENALEX_EMAIL` | Increases OpenAlex API rate limit; also used for Unpaywall | optional |
+| `OPENALEX_API_KEY` | Official OpenAlex API Key for higher rate limits and authenticated access ([get here](https://openalex.org/settings/api-key)) | optional |
 | `CORE_API_KEY` | CORE API key ([free registration](https://core.ac.uk/services/api)) | optional |
 | `DEEPSEEK_API_KEY` | Enhanced search via DeepSeek | optional |
 | `ZOTERO_LIBRARY_ID` + `ZOTERO_API_KEY` | Save papers to Zotero | optional |
