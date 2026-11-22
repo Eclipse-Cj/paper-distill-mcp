@@ -19,3 +19,4 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - run: pip install --upgrade pip && pip install .
       - run: PAPER_DISTILL_DATA_DIR=/tmp/test python tests/test_mcp_smoke.py
+      - run: PAPER_DISTILL_DATA_DIR=/tmp/test python tests/test_security.py

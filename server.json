@@ -7,12 +7,12 @@
     "url": "https://github.com/Eclipse-Cj/paper-distill-mcp",
     "source": "github"
   },
-  "version": "0.2.4",
+  "version": "0.2.5",
   "packages": [
     {
       "registryType": "pypi",
       "identifier": "paper-distill-mcp",
-      "version": "0.2.4",
+      "version": "0.2.5",
       "runtimeHint": "uvx",
       "transport": {
         "type": "stdio"

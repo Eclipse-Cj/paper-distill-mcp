@@ -136,7 +136,10 @@ def generate_digest(papers: list[dict], date: str, topics: dict | None = None) -
     """
     _ensure_sys_path()
     from generate.daily_digest import generate_all
+    from generate.validation import validate_date
 
+    # The date becomes part of output file names, so it must be a plain date.
+    date = validate_date(date)
     root = _get_root()
     return generate_all(papers, date, root, topics_data=topics)
 
@@ -154,7 +157,10 @@ async def send_push(date: str, papers: list[dict], platform: str = "telegram") -
     """
     _ensure_sys_path()
     from bot.notifier import format_daily_push
+    from generate.validation import validate_date
 
+    # The date is placed in the message and in the link to the digest page.
+    date = validate_date(date)
     cfg = load_config()
     message = format_daily_push(date, papers, cfg.site_url)
 
@@ -1155,6 +1161,35 @@ def get_config() -> str:
 
 # ── Entry point ────────────────────────────────────────────────────────────
 
+def _http_middleware(port: int) -> list:
+    """Return the middleware that protects the HTTP transport (see http_security.py).
+
+    Raises:
+        ValueError: if the HTTP security settings in the environment are unsafe.
+    """
+    from starlette.middleware import Middleware
+
+    from mcp_server.http_security import TOKEN_ENV, LocalRequestGuard, load_http_security
+
+    security = load_http_security(port, os.environ)
+    if security.token_generated:
+        print(
+            f"[paper-distill-mcp] {TOKEN_ENV} is not set. Token for this run:\n"
+            f"    {security.token}\n"
+            "  Clients must send the header 'Authorization: Bearer <token>'.\n"
+            f"  Set {TOKEN_ENV} to keep the same token between runs.",
+            file=sys.stderr,
+        )
+    return [
+        Middleware(
+            LocalRequestGuard,
+            allowed_hosts=security.allowed_hosts,
+            allowed_origins=security.allowed_origins,
+            token=security.token,
+        )
+    ]
+
+
 def main():
     parser = argparse.ArgumentParser(description="Paper Distill MCP Server")
     parser.add_argument(
@@ -1175,7 +1210,16 @@ def main():
         os.environ["PAPER_DISTILL_DATA_DIR"] = args.data_dir
 
     if args.transport == "http":
-        mcp.run(transport="streamable-http", host="127.0.0.1", port=args.port)
+        try:
+            middleware = _http_middleware(args.port)
+        except ValueError as exc:
+            parser.error(str(exc))
+        mcp.run(
+            transport="streamable-http",
+            host="127.0.0.1",
+            port=args.port,
+            middleware=middleware,
+        )
     else:
         mcp.run(transport="stdio")
 
