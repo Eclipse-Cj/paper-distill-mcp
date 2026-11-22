@@ -174,11 +174,35 @@ Same JSON config, different config file paths:
 | Windsurf | `~/.codeium/windsurf/mcp_config.json` |
 | Zed | `settings.json` |
 
-### HTTP transport (remote / hosted)
+### HTTP transport
 
 ```bash
+export PAPER_DISTILL_HTTP_TOKEN="$(python -c 'import secrets; print(secrets.token_urlsafe(32))')"
 paper-distill-mcp --transport http --port 8765
 ```
+
+The server listens on `http://127.0.0.1:8765/mcp`. It answers a request only if all of these hold:
+
+- the `Host` header is `127.0.0.1:8765` or `localhost:8765` (this blocks DNS rebinding from web pages);
+- the `Origin` header, when a browser sends one, is a local origin such as `http://localhost:3000`;
+- the request carries `Authorization: Bearer <token>`.
+
+If `PAPER_DISTILL_HTTP_TOKEN` is not set, a random token is generated for each run and printed at startup.
+
+Add the header in your client's MCP server settings. Most clients use this shape (the exact keys depend on the client):
+
+```json
+{
+  "mcpServers": {
+    "paper-distill": {
+      "url": "http://127.0.0.1:8765/mcp",
+      "headers": { "Authorization": "Bearer <token>" }
+    }
+  }
+}
+```
+
+To put a reverse proxy or a tunnel in front of the server, list its host name in `PAPER_DISTILL_ALLOWED_HOSTS` (comma-separated). The server then refuses to start unless `PAPER_DISTILL_HTTP_TOKEN` is set. Browser apps on other origins can be allowed with `PAPER_DISTILL_ALLOWED_ORIGINS`.
 
 ---
 
@@ -358,6 +382,9 @@ After setup, reply `collect 1 3` after a push to save papers 1 and 3 to Zotero, 
 | `ZOTERO_LIBRARY_ID` + `ZOTERO_API_KEY` | Save papers to Zotero | optional |
 | `SITE_URL` | Paper library website URL | optional |
 | `PAPER_DISTILL_DATA_DIR` | Data directory | default: `~/.paper-distill/` |
+| `PAPER_DISTILL_HTTP_TOKEN` | Bearer token for the HTTP transport | default: random per run |
+| `PAPER_DISTILL_ALLOWED_HOSTS` | Extra `Host` values for the HTTP transport (reverse proxy or tunnel); requires the token | optional |
+| `PAPER_DISTILL_ALLOWED_ORIGINS` | Extra browser origins for the HTTP transport | optional |
 
 ---
 
@@ -471,6 +498,7 @@ git clone https://github.com/Eclipse-Cj/paper-distill-mcp.git
 cd paper-distill-mcp
 python3 -m venv .venv && .venv/bin/pip install --upgrade pip && .venv/bin/pip install -e .
 python tests/test_mcp_smoke.py   # 9 tests, no network required
+python tests/test_security.py    # 12 tests, no network required
 ```
 
 ---

@@ -26,6 +26,11 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
+try:
+    from generate.validation import ensure_within, safe_filename, safe_relative_dir, validate_date
+except ModuleNotFoundError:  # run as a script: python generate/obsidian_note.py
+    from validation import ensure_within, safe_filename, safe_relative_dir, validate_date
+
 logging.basicConfig(
     format="%(asctime)s [%(name)s] %(levelname)s: %(message)s",
     level=logging.INFO,
@@ -498,7 +503,8 @@ def write_paper_notes(
         citekey = paper.get("citekey") or generate_citekey(paper)
         paper["citekey"] = citekey
 
-        filepath = output_dir / f"{citekey}.md"
+        filename = safe_filename(citekey, default="untitled")
+        filepath = ensure_within(output_dir, output_dir / f"{filename}.md")
         content = render_paper_note(paper, date)
         filepath.write_text(content, encoding="utf-8")
         paths.append(filepath)
@@ -528,14 +534,15 @@ def write_research_notes(
         zotero_dois = _fetch_zotero_dois(project_root)
 
     for topic in topics:
-        area = topic.get("area", "other")
-        title = topic.get("title", "untitled")
-        safe_title = _safe_filename(title)
+        # "area" and "title" come from the caller, so neither may leave the notes folder.
+        area_dir = safe_relative_dir(topic.get("area"), default="other")
+        safe_title = safe_filename(topic.get("title"), default="untitled")
 
-        note_dir = base_dir / "研究笔记" / area
+        notes_root = base_dir / "研究笔记"
+        note_dir = ensure_within(notes_root, notes_root / area_dir)
         note_dir.mkdir(parents=True, exist_ok=True)
 
-        filepath = note_dir / f"{safe_title}.md"
+        filepath = ensure_within(notes_root, note_dir / f"{safe_title}.md")
 
         if filepath.exists():
             existing = filepath.read_text(encoding="utf-8")
@@ -562,11 +569,12 @@ def write_topic_learning_log(
     base_dir: Path,
 ) -> Path:
     """Write the topic-based daily learning log."""
+    date = validate_date(date)
     log_dir = base_dir / "学习日志"
     log_dir.mkdir(parents=True, exist_ok=True)
 
     content = render_topic_learning_log(topics_data, date)
-    filepath = log_dir / f"{date}.md"
+    filepath = ensure_within(log_dir, log_dir / f"{date}.md")
     filepath.write_text(content, encoding="utf-8")
     logger.info("Wrote learning log: %s", filepath)
     return filepath

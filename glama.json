@@ -1,7 +1,7 @@
 {
   "$schema": "https://glama.ai/mcp/schemas/server.json",
   "name": "paper-distill-mcp",
-  "version": "0.2.4",
+  "version": "0.2.5",
   "description": "MCP server for academic paper search across 9 sources (OpenAlex, Semantic Scholar, PubMed, arXiv, Papers with Code, CrossRef, Europe PMC, bioRxiv, DBLP) with AI-powered curation, ranked push to Telegram/Discord/Feishu/WeCom, and Zotero/Obsidian integration.",
   "maintainers": ["Eclipse-Cj"],
   "homepage": "https://github.com/Eclipse-Cj/paper-distill-mcp",
